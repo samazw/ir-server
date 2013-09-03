@@ -38,7 +38,7 @@ static int in_ether (char *bufp, unsigned char *addr)
             val = c - 'A' + 10;
         else {
 #ifdef DEBUG
-            fprintf(stderr, "in_ether(%s): invalid ether address!\n", orig);
+            mylog("in_ether(%s): invalid ether address!\n", orig);
 #endif
             errno = EINVAL;
             return (-1);
@@ -55,7 +55,7 @@ static int in_ether (char *bufp, unsigned char *addr)
             val >>= 4;
         else {
 #ifdef DEBUG
-            fprintf(stderr, "in_ether(%s): invalid ether address!\n", orig);
+            mylog("in_ether(%s): invalid ether address!\n", orig);
 #endif
             errno = EINVAL;
             return (-1);

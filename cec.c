@@ -30,6 +30,7 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #include <libcec/cecc.h>
 
 #include "cec.h"
+#include "log.h"
 
 #define CEC_CONFIG_VERSION CEC_CLIENT_VERSION_CURRENT
 
@@ -48,7 +49,7 @@ static int CecLogMessage(void *(cbParam), const cec_log_message message)
 
 static int CecKeyPress(void *(cbParam), const cec_keypress (key))
 {
-  fprintf(stderr,"Key: %d, duration: %d\n",key.keycode,key.duration);
+  mylog("Key: %d, duration: %d\n",key.keycode,key.duration);
 
   return 0;
 }
@@ -57,10 +58,10 @@ static int CecCommand(void *(cbParam), const cec_command (command))
 {
   switch (command.opcode) {
     case CEC_OPCODE_STANDBY:
-      fprintf(stderr,"<Standby> command received\n");
+      mylog("<Standby> command received\n");
       break;
     default:
-      fprintf(stderr,"Cmd: initiator=%d, destination=%d, opcode=0x%02x\n",command.initiator,command.destination,command.opcode);
+      mylog("Cmd: initiator=%d, destination=%d, opcode=0x%02x\n",command.initiator,command.destination,command.opcode);
       break;
   }
   return 0;
@@ -68,12 +69,12 @@ static int CecCommand(void *(cbParam), const cec_command (command))
 
 static void CecSourceActivated(void *(cbParam),const cec_logical_address logical_address, const uint8_t activated)
 {
-  fprintf(stderr,"[CEC] Source %sactivated\n",(activated ? "" : "de"));
+  mylog("[CEC] Source %sactivated\n",(activated ? "" : "de"));
 }
 
 static int CecAlert(void *(cbParam), const libcec_alert type, const libcec_parameter (param))
 {
-  fprintf(stderr,"CecAlert - type=%d\n",type);
+  mylog("CecAlert - type=%d\n",type);
   switch (type)
     {
     case CEC_ALERT_CONNECTION_LOST:
@@ -188,7 +189,7 @@ int cec_init(int init_video, char* msgqueue)
 
   /* Initialise the library */
   if (!cec_initialise(&cec_config)) {
-    fprintf(stderr,"Error initialising libcec, aborting\n");
+    mylog("Error initialising libcec, aborting\n");
     return 1;
   }
 
@@ -202,24 +203,24 @@ int cec_init(int init_video, char* msgqueue)
   int nadapters = cec_find_adapters(devices, 10, NULL);
 
   if (nadapters <= 0) {
-    fprintf(stderr,"Error, no CEC adapters found.\n");
+    mylog("Error, no CEC adapters found.\n");
     cec_destroy();
     return 2;
   }
 
   if (nadapters > 1) {
-    fprintf(stderr,"WARNING: %d adapters found, using first.\n",nadapters);
+    mylog("WARNING: %d adapters found, using first.\n",nadapters);
   }
 
-  fprintf(stderr,"Using CEC adapter \"%s\", path=\"%s\"\n",devices[0].comm,devices[0].path);
+  mylog("Using CEC adapter \"%s\", path=\"%s\"\n",devices[0].comm,devices[0].path);
 
   /* Open device with a 10000ms (10s) timeout */
   if (!cec_open(devices[0].comm, CEC_DEFAULT_CONNECT_TIMEOUT)) {
-    fprintf(stderr,"Error, cannot open device %s\n",devices[0].comm);
+    mylog("Error, cannot open device %s\n",devices[0].comm);
     cec_destroy();
     return 3;
   }
-  fprintf(stderr,"Device open");
+  mylog("Device open");
 
   /* Enable callbacks, first parameter is the callback data passed to every callback */
   cec_enable_callbacks(msgqueue, &cec_callbacks);
@@ -227,19 +228,11 @@ int cec_init(int init_video, char* msgqueue)
   /* Get the menu language of the TV */
   cec_menu_language language;
   cec_get_device_menu_language(CEC_DEFAULT_BASE_DEVICE, &language);
-  fprintf(stderr,"TV menu language: \"%c%c%c\"\n",language.language[0],language.language[1],language.language[2]);
+  mylog("TV menu language: \"%c%c%c\"\n",language.language[0],language.language[1],language.language[2]);
 
   /* Get the power status of the TV */
   cec_power_status power_status = cec_get_device_power_status(CEC_DEFAULT_BASE_DEVICE);
-  fprintf(stderr,"TV Power Status:  %d\n",power_status);
-
-  /* Select ourselves as the source - this will also power-on the TV if needed */
- // fprintf(stderr,"Setting ourselves as the source\n");
- // cec_set_active_source(CEC_DEVICE_TYPE_RECORDING_DEVICE);
-
-    /* Power-off the TV */
-    // cec_standby_devices(CEC_DEFAULT_BASE_DEVICE);
-
+  mylog("TV Power Status:  %d\n",power_status);
 
 	ftime(&last_volume); 
 
@@ -342,7 +335,7 @@ void check_state(int desired_state) {
 	cec_power_status tv_state, hts_state;
 	cec_command command;
 
-	fprintf(stderr, "Statecheck\n");
+	mylog("Statecheck\n");
 
 	command.initiator = 1;
 	command.destination = CECDEVICE_TV;
