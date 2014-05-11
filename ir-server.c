@@ -6,6 +6,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -17,8 +18,12 @@
 #include "log.h"
 #include "net.h"
 #include "cec.h"
+#include "irsend.h"
 
 #define CHECK_REPEAT (kcount%2 == 0 && kcount != 2 && kcount != 4)
+
+#define PACKET_SIZE 256
+#define TIMEOUT 3
 
 int dofork = 1;
 int status = STATE_OFF;
@@ -45,10 +50,8 @@ int sgetline(int fd, char ** out)
     if (NULL == buffer)
         return -1;
 
-    while ((ret = read(fd, &buf, 1)))
-    {
-        if (ret < 1)
-        {
+    while ((ret = read(fd, &buf, 1)) != 0) {
+        if (ret < 1) {
             // error or disconnect
             free(buffer);
             return -1;
@@ -220,14 +223,16 @@ int main(int argc, char *argv[])
 			if (i == 2)
 				break;
 		}
-		printf("%d: %d %s\n", i, kcount, token);
+		mylog("%d: %d %s\n", i, kcount, token);
 
 		if((!strcmp(token, "KEY_POWER") || !strcmp(token, "KEY_POWER2")) && kcount == 0) {
 			alarm(0);
 			if (status == STATE_OFF) {
 				tv_power_on();
 				wol("54:04:a6:ed:2e:29");
-				sleep(5);
+				irsend("SEND_ONCE PHILIPS_TV POWER_ON 3");
+				sleep(2);
+				irsend("SEND_ONCE PHILIPS_TV POWER_ON 3");
 				philips_hts_power_on();
 				sleep(11);
 				philips_hts_set_audio_input(1);

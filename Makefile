@@ -1,5 +1,5 @@
-OBJECTS=net.o log.o cec.o ir-server.o
-HEADERS=net.h log.h cec.h
+OBJECTS=net.o log.o cec.o irsend.o ir-server.o
+HEADERS=net.h log.h cec.h irsend.h
 
 CC=gcc
 CFLAGS=-g -Wall -lcec -I/usr/local/include
